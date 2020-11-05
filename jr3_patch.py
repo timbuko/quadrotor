@@ -12,6 +12,7 @@ from matplotlib.backends.backend_qt5agg import (
     NavigationToolbar2QT as NavigationToolBar)
 from matplotlib.figure import Figure
 from patchbay.patch import BaseUiPatch
+import seqfile
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, base_dir)
@@ -79,7 +80,7 @@ class Patch(BaseUiPatch):
         return main_widget
 
     def run(self):
-        if self.task is None:
+        if self.task is None: #after you hit start it does this
             self.widgets['btn_start'].setText('Stop')
             self.data = self.data[0:0]  # clear all data
             axis = self.widgets['axis']
@@ -90,10 +91,12 @@ class Patch(BaseUiPatch):
             loop = asyncio.get_event_loop()
             filter_num = self.widgets['filter'].value()
             self.task = loop.create_task(self.show_data(filter_num))
-        else:
+        else: #when you hit stop it does this
             self.task.cancel()
             self.widgets['btn_start'].setText('Start')
-            out_path = os.path.expanduser('~/Desktop/jr3_data.csv')
+            in_path = os.path.expanduser('~\PycharmProjects\jr3 data')
+            dataName=seqfile.findNextFile(in_path, prefix='jr3_data_', suffix='.csv')
+            out_path = dataName #saves file here
             self.data.to_csv(out_path)
             self.task = None
 
@@ -116,9 +119,9 @@ class Patch(BaseUiPatch):
 
             if clock < last_clock:
                 t_cycles += 1
-
+#covert jr3 clock to seconds
             ds = pd.Series(force_array._asdict(),
-                           name=(clock - t0 + 2 ** 16 * t_cycles) / (
+                            name=(clock - t0 + 2 ** 16 * t_cycles) / (
                                        8e3 / 4 ** (filter - 1)))
             self.data = self.data.append(ds)
 
@@ -130,7 +133,7 @@ class Patch(BaseUiPatch):
             graph.draw()
 
             try:
-                await asyncio.sleep(0.01)
+                await asyncio.sleep(0.01) #delay between measurements (0.01=10ms)
             except asyncio.CancelledError:
                 break
 
