@@ -122,7 +122,7 @@ class Patch(BaseUiPatch):
 #covert jr3 clock to seconds
             ds = pd.Series(force_array._asdict(),
                             name=(clock - t0 + 2 ** 16 * t_cycles) / (
-                                       8e3 / 4 ** (filter - 1)))
+                                       7.076e3 / 4 ** (filter - 1))) #calculated sample frequency by finding error from stopwatch
             self.data = self.data.append(ds)
 
             for line_name in ['fx', 'fy', 'fz']:
